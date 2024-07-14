@@ -1,8 +1,10 @@
 use anchor_lang::prelude::*;
 pub mod state;
 pub mod instructions;
+pub mod errors;
+pub mod constants;
 
-declare_id!("2gWedLpUCkJUUyLyfjJnAAaxNBRvaxzBBJTSoq87MTTr");
+declare_id!("9SysbfwgBy6RAp75myGwuhLCfBWnohoJvvaKXV9fgE5C");
 
 #[program]
 pub mod talent_olympics_marketplace_for_services {
@@ -10,6 +12,17 @@ pub mod talent_olympics_marketplace_for_services {
 
     pub fn register_vendor(ctx: Context<RegisterVendor>, name: String) -> Result<()> {
         instructions::register_vendor(ctx, name)
+    }
+
+    pub fn create_service(
+        ctx: Context<ListService>,
+        name: String,
+        description: String,
+        price: u64,
+        is_soulbound: bool,
+        metadata_uri: String,
+    ) -> Result<()> {
+        instructions::create_service(ctx, name, description, price, is_soulbound, metadata_uri)
     }
 }
 
@@ -21,3 +34,13 @@ pub struct RegisterVendor<'info> {
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct ListService<'info> {
+    #[account(init, payer = vendor, space = 8 + 32 + 32 + 64 + 8 + 8 + 32)]
+    pub service: Account<'info, state::ServiceListing>,
+    #[account(mut, signer)]
+    pub vendor: Account<'info, state::Vendor>,
+    pub system_program: Program<'info, System>,
+}
+

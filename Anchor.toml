@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-talent_olympics_marketplace_for_services = "C19PZG14VjxjmqGQqARnC3nvydYM8TcmydANZr3Zc8Uq"
+talent_olympics_marketplace_for_services = "9SysbfwgBy6RAp75myGwuhLCfBWnohoJvvaKXV9fgE5C"
 
 [registry]
 url = "https://api.apr.dev"
