@@ -11,7 +11,7 @@ talent_olympics_marketplace_for_services = "C19PZG14VjxjmqGQqARnC3nvydYM8TcmydAN
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
