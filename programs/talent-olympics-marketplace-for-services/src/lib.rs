@@ -25,6 +25,10 @@ pub mod talent_olympics_marketplace_for_services {
     ) -> Result<()> {
         instructions::create_service(ctx, name, description, price, is_soulbound, metadata_uri)
     }
+
+    pub fn resell_service(ctx: Context<ResellService>, price: u64) -> Result<()> {
+        instructions::resell_service(ctx, price)
+    }
 }
 
 #[derive(Accounts)]
@@ -64,4 +68,24 @@ pub struct PurchaseService<'info> {
     pub mint_authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ResellService<'info> {
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+    #[account(mut)]
+    pub seller_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub buyer_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub vendor_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub nft: Account<'info, state::ServiceNFT>,
+    #[account(mut)]
+    pub service_listing: Account<'info, state::ServiceListing>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 }
