@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount, Mint};
 pub mod state;
 pub mod instructions;
 pub mod errors;
@@ -44,3 +45,23 @@ pub struct ListService<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct PurchaseService<'info> {
+    #[account(mut)]
+    pub service_listing: Account<'info, state::ServiceListing>,
+    #[account(init, payer = buyer, space = 8 + 32 + 32 + 32 + (32 + 8) * 10)]
+    pub service_nft: Account<'info, state::ServiceNFT>,
+    #[account(init, payer = buyer, space = 8 + 256, seeds = [b"metadata", service_nft.key().as_ref()], bump)]
+    pub metadata_account: Account<'info, state::Metadata>,
+    pub metadata_pda: AccountInfo<'info>,
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub service_nft_account: Account<'info, TokenAccount>,
+    #[account(seeds = [b"mint_authority"], bump)]
+    pub mint_authority: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}

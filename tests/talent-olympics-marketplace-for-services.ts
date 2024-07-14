@@ -33,9 +33,7 @@ describe("talent_olympics_marketplace_for_services", () => {
     expect(vendorAccount.owner.toString()).to.equal(user.publicKey.toString());
   });
 
-  it("Lists a service", async () => {
-    console.log("Vendor PublicKey:", vendor.publicKey.toString());
-    console.log("Service PublicKey:", service.publicKey.toString());
+  it("Create a service", async () => {
 
     await program.methods.createService(
       "Service1",
@@ -52,13 +50,57 @@ describe("talent_olympics_marketplace_for_services", () => {
       .signers([vendor])
       .rpc();
 
-    console.log("Vendor PublicKey:", vendor.publicKey.toString());
-
     const serviceAccount = await program.account.serviceListing.fetch(service.publicKey);
     expect(serviceAccount.name).to.equal("Service1");
     expect(serviceAccount.description).to.equal("This is a test service");
     expect(serviceAccount.price.toNumber()).to.equal(1000);
     expect(serviceAccount.isSoulbound).to.equal(true);
     expect(serviceAccount.metadataUri).to.equal("https://metadata.uri/service1");
+  });
+
+  it("Purchases a service", async () => {
+    // Define the buyer
+    const buyer = anchor.web3.Keypair.generate();
+
+    // Airdrop SOL to the buyer for testing purposes
+    const airdropSignature = await provider.connection.requestAirdrop(buyer.publicKey, anchor.web3.LAMPORTS_PER_SOL);
+
+    // confirm transaction
+    await provider.connection.confirmTransaction({
+      signature: airdropSignature,
+      lastValidBlockHeight: await provider.connection.getLatestBlockhash().then(res => res.lastValidBlockHeight),
+      blockhash: await provider.connection.getLatestBlockhash().then(res => res.blockhash),
+    });
+
+    // Fetch the mint public key
+    const mint = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("mint"), serviceNFT.publicKey.toBuffer()],
+      program.programId
+    );
+
+    // Fetch the token account public key
+    const serviceNFTAccount = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("service_nft"), serviceNFT.publicKey.toBuffer(), buyer.publicKey.toBuffer()],
+      program.programId
+    );
+
+    await program.methods.purchaseService()
+      .accounts({
+        serviceListing: service.publicKey,
+        serviceNft: serviceNFT.publicKey,
+        metadataAccount: metadataAccount.publicKey,
+        metadataPda: metadataAccount.publicKey,
+        buyer: buyer.publicKey,
+        mint: mint[0],
+        serviceNftAccount: serviceNFTAccount[0],
+        mintAuthority: mintAuthority.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([buyer, serviceNFT, metadataAccount, mintAuthority])
+      .rpc();
+
+    const serviceNftAccount = await program.account.serviceNft.fetch(serviceNFT.publicKey);
+    expect(serviceNftAccount.currentOwner.toString()).to.equal(buyer.publicKey.toString());
   });
 });
